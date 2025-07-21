@@ -1,4 +1,4 @@
-//server/controllers/auth.controler.js
+//server/controllers/auth.controller.js
 import jwt from 'jsonwebtoken';
 import { expressjwt } from 'express-jwt';
 import User from '../models/User.model.js';

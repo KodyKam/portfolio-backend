@@ -39,7 +39,7 @@ app.use("/api/users", userRoutes);
 app.use('/api/contacts', contactRoutes);
 app.use("/api/projects", projectRoutes);
 app.use("/api/qualifications", educationRoutes);
-app.use("/auth", authRoutes);
+app.use("/api/auth", authRoutes); // ✅ Match frontend
 // Default route
 app.get("/", (req, res) => {
   res.json({ message: "Welcome to My Portfolio application." });
