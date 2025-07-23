@@ -1,11 +1,10 @@
-//server/express.js
-import { requireSignin } from './controllers/auth.controller.js';
+// server/express.js
 import express from "express";
-// import bodyParser from "body-parser";
 import cookieParser from "cookie-parser";
 import compress from "compression";
 import cors from "cors";
 import helmet from "helmet";
+import { requireSignin } from './controllers/auth.controller.js';
 
 // Route imports
 import userRoutes from "./routes/user.routes.js";
@@ -14,23 +13,38 @@ import projectRoutes from "./routes/project.routes.js";
 import educationRoutes from "./routes/education.routes.js";
 import authRoutes from "./routes/auth.routes.js";
 
-// Initialize app
 const app = express();
 
-// Middleware
+// Allowed origins for CORS
+const allowedOrigins = [
+  'http://localhost:3000',
+  'https://kodykam.netlify.app'
+];
+
+// CORS middleware — must come BEFORE your routes!
+app.use(cors({
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,
+}));
+
+// Other middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-// app.use(bodyParser.json());
-// app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(compress());
 app.use(helmet());
-app.use(cors());
 
+// Test protected route example
 app.get('/api/secret', requireSignin, (req, res) => {
   res.json({
     message: "You accessed a protected route!",
-    user: req.auth // this contains the decoded token payload
+    user: req.auth, // decoded token payload
   });
 });
 
@@ -39,7 +53,8 @@ app.use("/api/users", userRoutes);
 app.use('/api/contacts', contactRoutes);
 app.use("/api/projects", projectRoutes);
 app.use("/api/qualifications", educationRoutes);
-app.use("/api/auth", authRoutes); // ✅ Match frontend
+app.use("/api/auth", authRoutes);
+
 // Default route
 app.get("/", (req, res) => {
   res.json({ message: "Welcome to My Portfolio application." });

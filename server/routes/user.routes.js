@@ -1,4 +1,4 @@
-//server/routes/user.routes.js
+// server/routes/user.routes.js
 import express from 'express';
 import { requireSignin } from '../controllers/auth.controller.js';
 import {
@@ -12,26 +12,38 @@ import {
 
 const router = express.Router();
 
-// Public routes
+/* ---------- Public Routes ---------- */
+
+// Create a new user
 router.post('/', createUser);
+
+// Get all users
 router.get('/', getAllUsers);
 
-// Protected route example
+/* ---------- Protected Routes (Must pass requireSignin middleware) ---------- */
+
+// Sample protected route
 router.get('/protected', requireSignin, (req, res) => {
   res.json({ message: 'This is a protected route.' });
 });
 
-// Apply protection to GET by ID
-router.get('/:id', requireSignin, getUserById);
-
-// Other CRUD routes
-router.put('/:id', updateUser);
-router.delete('/:id', deleteUser);
-router.delete('/', deleteAllUsers);
-
-// Optional test route
+// Another test protected route
 router.get('/secret', requireSignin, (req, res) => {
   res.json({ message: "This is a protected route. You are authenticated." });
 });
+
+/* ---------- User CRUD (Some Protected) ---------- */
+
+// Get user by ID (Protected)
+router.get('/:id', requireSignin, getUserById);
+
+// Update user by ID
+router.put('/:id', updateUser);
+
+// Delete user by ID
+router.delete('/:id', deleteUser);
+
+// Delete all users
+router.delete('/', deleteAllUsers);
 
 export default router;

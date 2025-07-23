@@ -5,6 +5,24 @@ import User from '../models/User.model.js';
 import config from '../config/config.js';
 import bcrypt from 'bcryptjs';
 
+// Sign Up
+export const signup = async (req, res) => {
+  const { name, email, password } = req.body;
+
+  try {
+    const existingUser = await User.findOne({ email });
+    if (existingUser)
+      return res.status(409).json({ error: 'Email is already taken.' });
+
+    const user = new User({ name, email, password });
+    await user.save();
+
+    res.status(201).json({ message: 'Signup successful! Please sign in.' });
+  } catch (err) {
+    res.status(500).json({ error: 'Error signing up user.' });
+  }
+};
+
 // Sign In
 export const signin = async (req, res) => {
   try {
