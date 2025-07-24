@@ -53,7 +53,8 @@ app.use("/api/users", userRoutes);
 app.use('/api/contacts', contactRoutes);
 app.use("/api/projects", projectRoutes);
 app.use("/api/qualifications", educationRoutes);
-app.use("/api/auth", authRoutes);
+// app.use("/api/auth", authRoutes);
+app.use('/api/auth', authRoutes);
 
 // Default route
 app.get("/", (req, res) => {
