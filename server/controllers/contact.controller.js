@@ -1,64 +1,57 @@
 // server/controllers/contact.controller.js
 import Contact from '../models/Contact.model.js';
+import nodemailer from 'nodemailer';
 
-// Create
+// Create contact (only sends email to you)
 export const createContact = async (req, res) => {
   try {
+    const { firstname, lastname, age, contactNumber, email, message } = req.body;
+
+    // Basic validation
+    if (!firstname || !lastname || !email || !message) {
+      return res.status(400).json({ error: "Firstname, lastname, email, and message are required." });
+    }
+
+    // 1. Save contact to MongoDB
     const contact = new Contact(req.body);
     await contact.save();
-    return res.status(201).json(contact);
-  } catch (err) {
-    return res.status(400).json({ error: "Failed to create contact." });
-  }
-};
 
-// Get All
-export const getAllContacts = async (req, res) => {
-  try {
-    const contacts = await Contact.find();
-    res.json(contacts);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-};
+    // 2. Setup Nodemailer transporter
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
 
-// Get by ID
-export const getContactById = async (req, res) => {
-  try {
-    const contact = await Contact.findById(req.params.id);
-    if (!contact) return res.status(404).json({ error: 'Contact not found' });
-    res.json(contact);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-};
+    // 3. Email to you (owner)
+    const mailOptions = {
+      from: `"Portfolio Contact" <${process.env.EMAIL_USER}>`,
+      to: process.env.EMAIL_RECEIVER || process.env.EMAIL_USER, // always your Gmail
+      subject: `📩 New Contact: ${firstname} ${lastname}`,
+      html: `
+        <h2>New Contact Submission</h2>
+        <p><strong>Name:</strong> ${firstname} ${lastname}</p>
+        <p><strong>Age:</strong> ${age || 'N/A'}</p>
+        <p><strong>Phone:</strong> ${contactNumber || 'N/A'}</p>
+        <p><strong>Email:</strong> ${email}</p>
+        <p><strong>Message:</strong><br/>${message}</p>
+      `,
+    };
 
-// Update
-export const updateContact = async (req, res) => {
-  try {
-    const updated = await Contact.findByIdAndUpdate(req.params.id, req.body, { new: true });
-    res.json(updated);
-  } catch (err) {
-    res.status(400).json({ error: err.message });
-  }
-};
+    await transporter.sendMail(mailOptions)
+      .then(() => console.log('📧 Owner email sent!'))
+      .catch(err => console.error('❌ Owner email failed:', err.message));
 
-// Delete by ID
-export const deleteContact = async (req, res) => {
-  try {
-    const result = await Contact.findByIdAndDelete(req.params.id);
-    res.json({ message: 'Contact deleted', result });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-};
+    // 4. Respond to frontend
+    return res.status(201).json({
+      message: '✅ Contact saved. Email sent to owner.',
+      contact,
+    });
 
-// Delete All
-export const deleteAllContacts = async (req, res) => {
-  try {
-    const result = await Contact.deleteMany();
-    res.json({ message: 'All contacts deleted', result });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('❌ Error in createContact:', err.message);
+    return res.status(500).json({ error: "Failed to create contact." });
   }
 };
